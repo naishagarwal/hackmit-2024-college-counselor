@@ -22,8 +22,8 @@ export default function RootLayout() {
           <nav className="navbar">
             <ul className="navbar-list">
               <li><Link to="/">Home</Link></li>
-              <li><Link to="/sign-in">Sign In</Link></li>
-              <li><Link to="/sign-up">Sign Up</Link></li>
+              {/* <li><Link to="/sign-in">Sign In</Link></li> */}
+              {/* <li><Link to="/sign-up">Sign Up</Link></li> */}
               <SignedIn>
                 <li><Link to="/app">Dashboard</Link></li>
                 <li><Link to="/app/uploader">Upload LinkedIn</Link></li>
@@ -37,7 +37,7 @@ export default function RootLayout() {
           </SignedOut>
         </div>
       </header>
-      <main>
+      <main className="main-content">
         <Outlet />
       </main>
     </ClerkProvider>

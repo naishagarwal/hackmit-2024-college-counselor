@@ -1,16 +1,26 @@
-/* General header styling */
+/* Header styling */
 .header {
     background-color: #2e7d32; /* Green background */
     color: white;
     padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
   }
   
+  /* Header content styling */
   .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
+    max-width: 1200px; /* Optional: limit header width for better alignment */
+    margin: 0 auto;
   }
   
+  /* Logo styling */
   .logo {
     font-size: 1.5rem;
     font-weight: bold;
@@ -19,8 +29,8 @@
   /* Navigation bar styling */
   .navbar {
     display: flex;
-    flex-grow: 1;
     justify-content: center;
+    flex-grow: 1;
   }
   
   .navbar-list {
@@ -60,5 +70,12 @@
   
   .sign-in-button:hover {
     background-color: #2e7d32; /* Base green color */
+  }
+  
+  /* Main content styling */
+  .main-content {
+    padding: 2rem;
+    width: 100%;
+    box-sizing: border-box;
   }
   
