@@ -12,8 +12,7 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider
-      routerPush={(to) => navigate(to)}
-      routerReplace={(to) => navigate(to, { replace: true })}
+      routerPush={navigate}
       publishableKey={PUBLISHABLE_KEY}
     >
       <header className="header">
