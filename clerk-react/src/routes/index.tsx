@@ -6,7 +6,7 @@ export default function IndexPage() {
       <h1 className="index-title">Welcome to LinkUp</h1>
       <nav className="index-nav">
         <ul className="index-navbar">
-          <li>
+          {/* <li>
             <Link to="/sign-up">Sign Up</Link>
           </li>
           <li>
@@ -20,7 +20,7 @@ export default function IndexPage() {
           </li>
           <li>
             <Link to="/app/profile">My Profile</Link>
-          </li>
+          </li> */}
         </ul>
       </nav>
     </div>
