@@ -15,7 +15,13 @@
 }
 
 #root {
-  width: 100dvw;
+  width: 100vw; /* Full viewport width */
+  height: 100vh; /* Full viewport height */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; /* Ensures content stretches to the full width */
+  margin: 0;
+  padding: 0;
 }
 
 a {
