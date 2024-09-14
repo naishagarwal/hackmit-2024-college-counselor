@@ -40,3 +40,52 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Center content */
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Navigation bar */
+nav {
+  display: flex;
+  justify-content: center;
+  background-color: #28a745; /* Green background */
+  padding: 10px;
+}
+
+/* Navigation links */
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 15px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for navigation links */
+nav a:hover {
+  background-color: white;
+  color: #28a745; /* Green text on hover */
+}
+
+/* Button */
+button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: white;
+  color: #28a745;
+}
