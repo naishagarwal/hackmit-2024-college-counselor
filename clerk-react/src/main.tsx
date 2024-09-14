@@ -13,7 +13,7 @@ import SignInPage from './routes/sign-in'
 import SignUpPage from './routes/sign-up'
 import DashboardPage from './routes/dashboard'
 import ProfilePage from './routes/profile'
-import UploaderPage from './routes/upload'
+import { UploaderPage } from './routes/uploader'
 
 const router = createBrowserRouter([
   {
