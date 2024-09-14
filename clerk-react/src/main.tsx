@@ -12,19 +12,23 @@ import IndexPage from './routes'
 import SignInPage from './routes/sign-in'
 import SignUpPage from './routes/sign-up'
 import DashboardPage from './routes/dashboard'
+import ProfilePage from './routes/profile'
+import UploaderPage from './routes/upload'
 
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/', element: <IndexPage /> },
+      { path: '/', element: <IndexPage /> }, // Landing page
       { path: '/sign-in/*', element: <SignInPage /> },
       { path: '/sign-up/*', element: <SignUpPage /> },
       {
         element: <DashboardLayout />,
-        path: 'dashboard',
+        path: 'app',
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/app', element: <DashboardPage /> },
+          { path: '/app/uploader', element: <UploaderPage /> },
+          { path: '/app/profile', element: <ProfilePage /> },
         ],
       },
     ],

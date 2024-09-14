@@ -13,7 +13,13 @@ export default function IndexPage() {
             <Link to="/sign-in">Sign In</Link>
           </li>
           <li>
-            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/app">App</Link>
+          </li>
+          <li>
+            <Link to="/app/uploader">Uploader (linkedin)</Link>
+          </li>
+          <li>
+            <Link to="/app/profile">My profile</Link>
           </li>
         </ul>
       </div>
