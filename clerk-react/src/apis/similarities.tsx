@@ -20,7 +20,7 @@ class SimilaritiesApi {
   async querySimilarities(params: IQuerySimilaritiesPayload) {
     const request: AxiosRequestConfig = {
       method: "POST",
-      url: "/query_similarities",
+      url: "/query_similarity",
       data: {
         name: params.name,
         college: params.college,

@@ -5,7 +5,8 @@ import openai
 openai.api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
 
 app = Flask(__name__)
-CORS(app)
+#CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 #@app.route('/')
 # def homepage():
@@ -190,7 +191,7 @@ def query_similarity():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-@app.route('/get_college_plan', methods=['POST'])
+@app.route('/generate_college_plan', methods=['POST'])
 def generate_college_plan():
     try:
         # Get the user query from the request
