@@ -114,13 +114,14 @@ def upload_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Second Endpoint: User query and similarity search
 @app.route('/query_similarity', methods=['POST'])
 def query_similarity():
     try:
-        # Get the user query from the request
+        # Get the user query and filters from the request
         user_query = request.json.get('query')
         college_filter = request.json.get('college') 
+        major_filter = request.json.get('major') 
+        
         if not user_query:
             return jsonify({'error': 'No query provided'}), 400
 
@@ -139,24 +140,28 @@ def query_similarity():
         # Define the table name
         tableName = "User_Profiles"
 
-        # Prepare the SQL query
-        if college_filter:
-            sql = f"""
-            SELECT TOP ? Name, combined_text
-            FROM {tableName}
-            WHERE College = ?
-            ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
-            """
-            cursor.execute(sql, [number_of_results, college_filter, query_vector_str])
-        else:
-            sql = f"""
-            SELECT TOP ? Name, combined_text
-            FROM {tableName}
-            ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
-            """
-            # Execute the SQL query
-            cursor.execute(sql, [number_of_results, query_vector_str])
+        # Build the base SQL query
+        sql = f"""
+        SELECT TOP ? Name, College, High_School_Location, Major, combined_text
+        FROM {tableName}
+        WHERE 1=1
+        """
 
+        # Add filters if provided
+        params = [number_of_results]  # Initialize parameters with number of results
+        if college_filter:
+            sql += " AND College = ?"
+            params.append(college_filter)
+        if major_filter:
+            sql += " AND Major = ?"
+            params.append(major_filter)
+
+        # Add similarity ordering
+        sql += " ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC"
+        params.append(query_vector_str)  # Add query vector to parameters
+
+        # Execute the SQL query
+        cursor.execute(sql, params)
         fetched_data = cursor.fetchall()
 
         # Prepare the response
@@ -164,12 +169,14 @@ def query_similarity():
         for row in fetched_data:
             response.append({
                 'Name': row[0],
-                'combined_text': row[1]
+                'College': row[1],
+                'High_School_Location': row[2],
+                'Major': row[3],
+                'combined_text': row[4],
             })
 
         # Close the connection
         cursor.close()
-        conn.commit()
         conn.close()
 
         return jsonify({'results': response}), 200
