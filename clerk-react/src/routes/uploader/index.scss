@@ -47,8 +47,11 @@
 }
 
 #linkedin-signin {
-  background-color: rgb(51, 117, 178);
+  background-color: #0474b3;
   color: white;
-}
+  font-weight: 600;
 
-/** Cool spinner loader **/ 
+  img {
+    height: 90%;
+  }
+}
