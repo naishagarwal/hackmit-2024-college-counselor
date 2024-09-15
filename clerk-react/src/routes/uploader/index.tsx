@@ -67,6 +67,13 @@ export const UploaderPage: FC = () => {
             To help us build your personalized college plan, connect your LinkedIn profile. This way, we can gather key info like your education, work experience, and skills. Don’t worry, you’ll be able to review and tweak everything before we move ahead.
           </p>
           <SignInWithLinkedinBtn />
+          <Button
+            size="large"
+            onClick={() => moveToNextSlide()}
+            style={{ marginTop: '16px' }}
+          >
+            Go straight to form
+          </Button>
         </SwiperSlide>
         <SwiperSlide className="swiper-slide custom-wrapper">
           <div className="form-question">

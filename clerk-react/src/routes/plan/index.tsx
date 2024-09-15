@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { Button } from "antd";
+import { Button, Popover } from "antd";
 import { useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
 import { MdAlternateEmail as EmailIcon } from "react-icons/md";
+import { IoPricetagsOutline as TagsIcon } from "react-icons/io5";
 //
 import { selectCollegePlan, selectLoadedPlanFlag, selectSimilaritiesResults } from "../../redux/slices/metadata"
 import "./index.scss";
@@ -27,7 +28,12 @@ const UserCard = ({ user }: { user: IUserCard }) => {
       <span className="pathfinder-name">{user.Name}</span>
       <span>{user.College}</span>
       <span className="pathfinder-major">{user.Major}</span>
-      <EmailIcon className="pathfinder-icon" />
+      <div className="pathfinder-icon-wrapper">
+        <EmailIcon style={{ marginRight: "5px" }} className="pathfinder-icon" />
+        <Popover content={user.combined_text} style={{ maxWidth: 100 }}>
+          <TagsIcon className="pathfinder-icon" />
+        </Popover>
+      </div>
     </div>
   );
 };

@@ -15,6 +15,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.ant-popover-open {
+  max-width: 200px !important;
+}
+
 #root {
   width: 100vw; /* Full viewport width */
   height: 100vh; /* Full viewport height */
