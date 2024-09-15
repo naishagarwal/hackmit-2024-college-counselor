@@ -245,12 +245,13 @@ def query_similarity():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+
 @app.route('/summary_statistics', methods=['POST'])
 def summary_statistics():
-    # Extract parameters from the request
-    college_query = request.form.get('college')
-    activity_query = request.form.get('query')
-    location_query = request.form.get('high_school_location')
+    # Extract parameters from the request JSON body
+    college_query = request.json.get('college')
+    activity_query = request.json.get('query')
+    location_query = request.json.get('high_school_location')
 
     # Connect to the database
     conn = iris.connect(connection_string, username, password)
@@ -270,7 +271,8 @@ def summary_statistics():
             WHERE College = ?
         """
         cursor.execute(total_college_count_query, [college_query])
-        total_college_count = cursor.fetchone()[0] if college_query else 0
+        result = cursor.fetchone()
+        total_college_count = result[0] if result else 0  # Ensure it gets the correct integer value
 
         # Define the SQL query to count the number of people attending the specified college and did the specified activity
         activity_count_query = f"""
@@ -279,7 +281,8 @@ def summary_statistics():
             WHERE College = ? AND combined_text LIKE ?
         """
         cursor.execute(activity_count_query, [college_query, f'%{activity_query}%'])
-        activity_count = cursor.fetchone()[0] if college_query and activity_query else 0
+        result = cursor.fetchone()
+        activity_count = result[0] if result else 0  # Ensure it gets the correct integer value
 
         # Define the SQL query to count the number of people attending the specified college and have the specified high school location
         location_count_query = f"""
@@ -288,12 +291,15 @@ def summary_statistics():
             WHERE College = ? AND High_School_Location = ?
         """
         cursor.execute(location_count_query, [college_query, location_query])
-        location_count = cursor.fetchone()[0] if college_query and location_query else 0
+        result = cursor.fetchone()
+        location_count = result[0] if result else 0  # Ensure it gets the correct integer value
 
         # Close the connection
         cursor.close()
         conn.close()
 
+        print(total_college_count)
+        total_college_count = total_college_count[0]
         if total_college_count > 0:
             activity_percentage = (activity_count / total_college_count) * 100
             location_percentage = (location_count / total_college_count) * 100
@@ -312,7 +318,7 @@ def summary_statistics():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 @app.route('/generate_college_plan', methods=['POST'])
 def generate_college_plan():
     try:
