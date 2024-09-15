@@ -123,6 +123,7 @@ def query_similarity():
         user_query = request.json.get('query')
         college_filter = request.json.get('college') 
         major_filter = request.json.get('major') 
+        user_name = request.json.get('name')
         
         if not user_query:
             return jsonify({'error': 'No query provided'}), 400
@@ -191,6 +192,7 @@ def generate_college_plan():
     try:
         # Get the user query from the request
         user_query = request.json.get('query')
+        user_name = request.json.get('name')
         if not user_query:
             return jsonify({'error': 'No query provided'}), 400
 
@@ -218,7 +220,7 @@ def generate_college_plan():
 
         # Create the prompt for the LLM
         prompt = f"""
-        A student has the following query: '{user_query}'.
+        {user_name} has the following query: '{user_query}'.
         Based on the following similar profiles:
         {combined_sentences}
         Provide a personalized college plan for the student. Make your response as specific as possible to the student data provided, giving examples. The response should be addressed to the student.
