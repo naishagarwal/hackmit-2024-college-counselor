@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
+import openai
 
 app = Flask(__name__)
 CORS(app)
@@ -155,7 +156,7 @@ def query_similarity():
             """
             # Execute the SQL query
             cursor.execute(sql, [number_of_results, query_vector_str])
-        
+
         fetched_data = cursor.fetchall()
 
         # Prepare the response
