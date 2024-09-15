@@ -50,7 +50,10 @@ def upload_csv():
         df = pd.read_csv(file)
 
         # Check if required columns exist
-        required_columns = ['Name', 'College', 'Major', 'High_School', 'High_School_Location', 'Extracurriculars', 'Volunteering', 'Awards', 'Email']
+        required_columns = [
+            'Name', 'College', 'Major', 'High_School', 'High_School_Location', 
+            'Extracurriculars', 'Volunteering', 'Awards', 'Email', 'Gender', 'PicLinks'
+        ]
         if not all(col in df.columns for col in required_columns):
             return jsonify({'error': 'Missing required columns in CSV'}), 400
 
@@ -75,9 +78,12 @@ def upload_csv():
             High_School VARCHAR(255), 
             High_School_Location VARCHAR(255), 
             Email VARCHAR(255),
+            Gender VARCHAR(50),
+            PicLinks VARCHAR(255),
             combined_text VARCHAR(1000), 
             combined_text_vector VECTOR(DOUBLE, {vector_dimension}))
         """
+
 
         # Drop the table if it exists
         try:
@@ -91,9 +97,10 @@ def upload_csv():
         # Prepare the SQL insert statement
         sql = f"""
             INSERT INTO {tableName}
-            (Name, College, Major, High_School, High_School_Location, Email, combined_text, combined_text_vector) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, TO_VECTOR(?))
+            (Name, College, Major, High_School, High_School_Location, Email, Gender, PicLinks, combined_text, combined_text_vector) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TO_VECTOR(?))
         """
+
 
         # Insert data into the table
         start_time = time.time()
@@ -105,9 +112,12 @@ def upload_csv():
                 row['High_School'],
                 row['High_School_Location'],
                 row['Email'],
+                row['Gender'],
+                row['PicLinks'],
                 row['combined_text'],
                 json.dumps(row['combined_text_vector'])  # Convert vector to JSON string
             ])
+
         end_time = time.time()
         print(f"time taken to add {len(df)} entries: {end_time - start_time} seconds")
 
@@ -158,7 +168,7 @@ def query_similarity():
 
         # Build the base SQL query
         sql = f"""
-        SELECT TOP ? Name, College, High_School_Location, Major, combined_text, Email
+        SELECT TOP ? Name, College, High_School_Location, Major, Gender, PicLinks, combined_text, Email
         FROM {tableName}
         WHERE 1=1
         """
@@ -219,9 +229,12 @@ def query_similarity():
                 'College': row[1],
                 'High_School_Location': row[2],
                 'Major': row[3],
-                'combined_text': row[4],
-                'Email': row[5]  
+                'Gender': row[4],
+                'PicLinks': row[5],
+                'combined_text': row[6],
+                'Email': row[7]  
             })
+
 
         # Close the connection
         cursor.close()
