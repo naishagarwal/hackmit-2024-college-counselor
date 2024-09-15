@@ -93,7 +93,7 @@ Make sure you have Python, Yarn, and Node.js installed.
 
 ## Authors
 
-This project was built by Naisha Agarwal, Selina Song, Carlos Pinto, and Simon Storf. Check out our [GitHub repository](https://github.com/naishagarwal/hackmit-2024-college-counselor.git) for more details and contributions.
+This project was built by Naisha Agarwal, Selina Song, Carlos Pinto, and Simon Storf.
 
 ---
 
