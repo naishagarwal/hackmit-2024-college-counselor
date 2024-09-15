@@ -59,7 +59,12 @@ export const metadataSlice = createSlice({
 
 export const { setLoadedPlanFlag, setSimilaritiesResults, setCollegePlan, setFetchCollegePlanFlag } = metadataSlice.actions;
 export const selectLoadedPlanFlag = (state: { metadata: IMetadataState }) => state.metadata.has_loaded_plan;
-export const selectSimilaritiesResults = (state: { metadata: IMetadataState }) => state.metadata.similarities.results;
+export const selectSimilaritiesResults = (state: { metadata: IMetadataState }) => {
+  const results = state.metadata.similarities.results;
+  if (!results || !results.length) {
+    return [];
+  }
+}
 export const selectCollegePlan = (state: { metadata: IMetadataState }) => state.metadata.college_plan.personalized_college_plan;
 export const selectCollegePlanFlag = (state: { metadata: IMetadataState }) => state.metadata.fetch_college_plan;
 export const selectSimilaritiesForm = (state: { metadata: IMetadataState }) => state.metadata.similarities.form;
