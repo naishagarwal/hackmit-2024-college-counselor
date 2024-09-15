@@ -30,10 +30,10 @@ export const UploaderPage: FC = () => {
       setProcessing(true);
       form.submit();
       const similarities_payload = {
-        name: "Carlos", // Remove hardcoded value and add the "Name" input field from Clerk
+        name: "Naisha", // Remove hardcoded value and add the "Name" input field from Clerk
         college: form.getFieldValue("intended_university") as string,
         major: form.getFieldValue("intended_major") as string,
-        query: "Coding" // Remove hardcoded value and add the "Select your interests" dropdown
+        query: form.getFieldValue("interests") as string
       };
       const results = await similaritiesApi.querySimilarities(similarities_payload);
       console.info("got the similarities", results);
