@@ -120,6 +120,7 @@ def query_similarity():
     try:
         # Get the user query from the request
         user_query = request.json.get('query')
+        college_filter = request.json.get('college') 
         if not user_query:
             return jsonify({'error': 'No query provided'}), 400
 
@@ -139,14 +140,23 @@ def query_similarity():
         tableName = "User_Profiles"
 
         # Prepare the SQL query
-        sql = f"""
-        SELECT TOP ? Name, combined_text
-        FROM {tableName}
-        ORDER BY VECTOR_COSINE(combined_text_vector, TO_VECTOR(?)) DESC
-        """
+        if college_filter:
+            sql = f"""
+            SELECT TOP ? Name, combined_text
+            FROM {tableName}
+            WHERE College = ?
+            ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
+            """
+            cursor.execute(sql, [number_of_results, college_filter, query_vector_str])
+        else:
+            sql = f"""
+            SELECT TOP ? Name, combined_text
+            FROM {tableName}
+            ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
+            """
+            # Execute the SQL query
+            cursor.execute(sql, [number_of_results, query_vector_str])
 
-        # Execute the SQL query
-        cursor.execute(sql, [number_of_results, query_vector_str])
         fetched_data = cursor.fetchall()
 
         # Prepare the response
@@ -170,6 +180,3 @@ def query_similarity():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5010)
-
-# if __name__ == '__main__':
-#     app.run(debug=True, host='0.0.0.0', port=5010)
