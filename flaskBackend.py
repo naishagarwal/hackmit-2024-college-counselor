@@ -227,7 +227,7 @@ def generate_college_plan():
         {user_name} has the following query: '{user_query}'.
         Based on the following similar profiles:
         {combined_sentences}
-        Provide a personalized college plan for the student. Make your response as specific as possible to the student data provided, giving examples. The response should be addressed to the student.
+        Provide a personalized college plan for the student. Make your response as specific as possible to the student data provided, giving examples. The response should be addressed to the student. Make this as short and succint as possible.
         """
 
         url = "https://api.openai.com/v1/chat/completions"
