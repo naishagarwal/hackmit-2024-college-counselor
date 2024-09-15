@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
 import openai
+openai.api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +17,7 @@ CORS(app)
 import iris
 import json
 import time
+import requests
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer  # Import for encoding text
@@ -183,6 +185,71 @@ def query_similarity():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/get_college_plan', methods=['POST'])
+def generate_college_plan():
+    try:
+        # Get the user query from the request
+        user_query = request.json.get('query')
+        if not user_query:
+            return jsonify({'error': 'No query provided'}), 400
+
+        # Fetch similar results (you can reuse the query_similarity logic here)
+        similar_profiles_response, status_code = query_similarity()
+        print(type(similar_profiles_response)) #Flask Response Object
+
+        if status_code != 200:
+            return jsonify({'error': 'Failed to fetch similar profiles'}), status_code
+
+        # Parse the JSON response body (similar_profiles_response is likely a JSON string)
+        similar_profiles_data = similar_profiles_response.get_json()
+        print(type(similar_profiles_data))
+        #print(similar_profiles_data)
+
+        name_combined_text_dict = {profile['Name']: profile['combined_text'] for profile in similar_profiles_data['results']}
+        print(name_combined_text_dict)
+
+        combined_sentences = ""
+        for name, text in name_combined_text_dict.items():
+            sentence = f"Name {name}, Info: {text}. "
+            combined_sentences+= sentence
+        
+        print(combined_sentences)
+
+        # Create the prompt for the LLM
+        prompt = f"""
+        A student has the following query: '{user_query}'.
+        Based on the following similar profiles:
+        {combined_sentences}
+        Provide a personalized college plan for the student. Make your response as specific as possible to the student data provided, giving examples. The response should be addressed to the student.
+        """
+
+        url = "https://api.openai.com/v1/chat/completions"
+        api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "gpt-4",  # or another model like "gpt-3.5-turbo"
+            "messages": [
+                {"role": "system", "content": "You are a personal college counselor for high school students."},
+                {"role": "user", "content": prompt}
+            ]
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+        response_json = response.json()
+
+        # Extract the generated response from the LLM
+        generated_plan = response_json['choices'][0]['message']['content'].strip()
+
+
+        return jsonify({'personalized_college_plan': generated_plan}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 
 if __name__ == '__main__':
