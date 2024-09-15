@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
+import openai
 
 app = Flask(__name__)
 CORS(app)
@@ -141,7 +142,7 @@ def query_similarity():
         sql = f"""
         SELECT TOP ? Name, combined_text
         FROM {tableName}
-        ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
+        ORDER BY VECTOR_COSINE(combined_text_vector, TO_VECTOR(?)) DESC
         """
 
         # Execute the SQL query
