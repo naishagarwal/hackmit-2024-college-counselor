@@ -1,4 +1,67 @@
 //
+.with-plan {
+  h1 {
+    font-size: 1.5rem;
+  }
+}
+
+.pathfinders-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 1rem 1.5rem;
+
+  .pathfinder-card {
+    height: 250px;
+    flex: 1;
+    margin: 1rem auto;
+    border: 1px solid rgb(202, 202, 202);
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 1rem .5rem;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  
+    img {
+      height: 75px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: .5rem;
+    }
+  
+    span {
+      font-weight: 600;
+      color: #7b7b7b;
+    }
+    
+    .pathfinder-name {
+      color: #333;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .pathfinder-major {
+      font-size: .88rem;
+    }
+
+    .pathfinder-icon {
+      margin-top: 1rem;
+      background-color: rgb(202, 202, 202);
+      padding: 7px;
+      border-radius: 9px;
+      color: rgb(50, 49, 49);
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+}
+
 .no-plan-fallback {
   display: flex;
   flex-direction: column;

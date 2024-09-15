@@ -111,7 +111,7 @@ export const UploaderPage: FC = () => {
             </Button>
           </div>
         </SwiperSlide>
-        <SwiperSlide className="swiper-slide custom wrapper">
+        <SwiperSlide className="swiper-slide custom-wrapper">
           <div className="form-question">
             <h2>What Sparks Your Curiosity?</h2>
             <p>Tell us about your interests so we can better tailor your college plan.</p>
