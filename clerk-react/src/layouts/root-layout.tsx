@@ -1,9 +1,13 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { ClerkProvider, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
+import { useEffect } from 'react';
 import { ConfigProvider as AntDesignProvider } from 'antd';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { ClerkProvider, SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 //
 import design_token from './design-token';
+import { selectCollegePlanFlag, setCollegePlan, setFetchCollegePlanFlag } from '../redux/slices/metadata';
 import './RootLayout.css'; // Import the specific CSS for RootLayout
+import SimilaritiesApi from '../apis/similarities';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -13,6 +17,28 @@ if (!PUBLISHABLE_KEY) {
 
 export default function RootLayout() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const fetchCollegePlanFlag = useSelector(selectCollegePlanFlag);
+
+  const similaritiesApi = new SimilaritiesApi();
+
+  useEffect(() => {
+    async function fetchCollegePlan() {
+      const college_plan = await similaritiesApi.generateCollegePlan({
+        name: "Carlos",
+        college: "MIT",
+        major: "Computer Science",
+        query: "Coding"
+      });
+      console.info("got the college plan", college_plan);
+      dispatch(setCollegePlan({ plan: college_plan }));
+      dispatch(setFetchCollegePlanFlag({ flag: false }));
+    }
+
+    if (fetchCollegePlanFlag) {
+      fetchCollegePlan();
+    }
+  }, [fetchCollegePlanFlag]);
 
   return (
     <ClerkProvider

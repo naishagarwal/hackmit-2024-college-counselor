@@ -26,7 +26,7 @@ class SimilaritiesApi {
         college: params.college,
         major: params.major,
         query: params.query
-      },
+      }
     };
 
     const response = await this.axios(request);

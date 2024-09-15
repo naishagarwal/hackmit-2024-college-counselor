@@ -1,14 +1,16 @@
 import { FC, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, Select } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import "swiper/css";
 //
 import { SignInWithLinkedinBtn } from "./components/linkedin-btn";
-import { setLoadedPlanFlag } from "../../redux/slices/metadata";
+import { setFetchCollegePlanFlag, setLoadedPlanFlag, setSimilaritiesResults } from "../../redux/slices/metadata";
 import SimilaritiesApi from "../../apis/similarities";
 import "./index.scss";
+
+const { Option } = Select;
 
 export const UploaderPage: FC = () => {
   const [swiperIns, setSwiperIns] = useState<any>(null); // eslint-disable-line
@@ -28,21 +30,21 @@ export const UploaderPage: FC = () => {
       setProcessing(true);
       form.submit();
       const similarities_payload = {
-        name: "Carlos",
+        name: "Carlos", // Remove hardcoded value and add the "Name" input field from Clerk
         college: form.getFieldValue("intended_university") as string,
         major: form.getFieldValue("intended_major") as string,
-        query: "Coding",
+        query: "Coding" // Remove hardcoded value and add the "Select your interests" dropdown
       };
       const results = await similaritiesApi.querySimilarities(similarities_payload);
       console.info("got the similarities", results);
-
-      const college_plan = await similaritiesApi.generateCollegePlan(similarities_payload);
-      console.info("got the college plan", college_plan);
+      dispatch(setSimilaritiesResults({ results }));
+      setProcessing(false);
+      dispatch(setFetchCollegePlanFlag({ flag: true }));
     }
   }
 
   function auxProcessingClick() {
-    setProcessing(false);
+    setProcessing(() => !processing);
   }
 
   function goToResults() {
@@ -104,6 +106,42 @@ export const UploaderPage: FC = () => {
             <Form.Item name="high_school_location">
               <Input placeholder="High School Location" size="large" />
             </Form.Item>
+            <Button type="primary" size="large" onClick={() => moveToNextSlide()}>
+              Continue
+            </Button>
+          </div>
+        </SwiperSlide>
+        <SwiperSlide className="swiper-slide custom wrapper">
+          <div className="form-question">
+            <h2>What Sparks Your Curiosity?</h2>
+            <p>Tell us about your interests so we can better tailor your college plan.</p>
+            <Form.Item name="interests">
+              <Select
+                  mode="tags"
+                  style={{ width: '100%' }}
+                  placeholder="Select or type your interests"
+                  dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                  size="large"
+                  maxTagCount={4}
+                  allowClear
+                >
+                  <Option value="science">Science</Option>
+                  <Option value="coding">Coding</Option>
+                  <Option value="space">Space</Option>
+                  <Option value="design">Design</Option>
+                  <Option value="healthcare">Healthcare</Option>
+                  <Option value="environment">Environment</Option>
+                  <Option value="law">Law</Option>
+                  <Option value="education">Education</Option>
+                  <Option value="engineering">Engineering</Option>
+                  <Option value="mathematics">Mathematics</Option>
+                  <Option value="technology">Technology</Option>
+                  <Option value="arts">Arts</Option>
+                  <Option value="humanities">Humanities</Option>
+                  <Option value="business">Business</Option>
+                  <Option value="social_sciences">Social Sciences</Option>
+                </Select>
+            </Form.Item>
             <Button type="primary" size="large" onClick={() => moveToNextSlide({ lastSlide: true })}>
               Continue
             </Button>
@@ -115,12 +153,14 @@ export const UploaderPage: FC = () => {
             {processing ? (
               <>
                 <p>We're getting your network and college plan ready. Hang tight!</p>
-                <span>cool loading indicator here ...</span>
+                <Button type="primary" size="large" disabled={processing} loading={processing}>
+                  Processing...
+                </Button>
               </>
             ) : (
               <>
                 <p>
-                  We're ready with your network and college plan. Click below to view your results.
+                  We're ready with your network and college plan. Click below to view your results 🎉
                 </p>
                 <Button type="primary" size="large" htmlType="submit" onClick={goToResults}>
                   View results

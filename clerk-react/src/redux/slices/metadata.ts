@@ -3,10 +3,24 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface IMetadataState {
   has_loaded_plan: boolean;
+  similarities: {
+    results: object[];
+  };
+  college_plan: {
+    personalized_college_plan: string | null;
+  };
+  fetch_college_plan: boolean;
 }
 
 export const initialState: IMetadataState = {
-  has_loaded_plan: false
+  has_loaded_plan: false,
+  similarities: {
+    results: []
+  },
+  college_plan: {
+    personalized_college_plan: null
+  },
+  fetch_college_plan: false
 };
 
 export const metadataSlice = createSlice({
@@ -16,10 +30,25 @@ export const metadataSlice = createSlice({
     setLoadedPlanFlag: (state, action: PayloadAction<{ flag: boolean }>) => {
       const { flag } = action.payload;
       state.has_loaded_plan = flag;
+    },
+    setSimilaritiesResults: (state, action: PayloadAction<{ results: object[] }>) => {
+      const { results } = action.payload;
+      state.similarities.results = results;
+    },
+    setCollegePlan: (state, action: PayloadAction<{ plan: string }>) => {
+      const { plan } = action.payload;
+      state.college_plan.personalized_college_plan = plan;
+    },
+    setFetchCollegePlanFlag: (state, action: PayloadAction<{ flag: boolean }>) => {
+      const { flag } = action.payload;
+      state.fetch_college_plan = flag;
     }
   }
 });
 
-export const { setLoadedPlanFlag } = metadataSlice.actions;
+export const { setLoadedPlanFlag, setSimilaritiesResults, setCollegePlan, setFetchCollegePlanFlag } = metadataSlice.actions;
 export const selectLoadedPlanFlag = (state: { metadata: IMetadataState }) => state.metadata.has_loaded_plan;
+export const selectSimilaritiesResults = (state: { metadata: IMetadataState }) => state.metadata.similarities.results;
+export const selectCollegePlan = (state: { metadata: IMetadataState }) => state.metadata.college_plan.personalized_college_plan;
+export const selectCollegePlanFlag = (state: { metadata: IMetadataState }) => state.metadata.fetch_college_plan;
 export default metadataSlice.reducer;
