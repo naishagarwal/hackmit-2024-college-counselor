@@ -7,6 +7,7 @@ import "swiper/css";
 //
 import { SignInWithLinkedinBtn } from "./components/linkedin-btn";
 import { setLoadedPlanFlag } from "../../redux/slices/metadata";
+import SimilaritiesApi from "../../apis/similarities";
 import "./index.scss";
 
 export const UploaderPage: FC = () => {
@@ -16,7 +17,9 @@ export const UploaderPage: FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
-  function moveToNextSlide({ lastSlide = false } = {}) {
+  const similaritiesApi = new SimilaritiesApi();
+
+  async function moveToNextSlide({ lastSlide = false } = {}) {
     if (swiperIns) {
       swiperIns.slideNext();
     }
@@ -24,6 +27,17 @@ export const UploaderPage: FC = () => {
     if (lastSlide) {
       setProcessing(true);
       form.submit();
+      const similarities_payload = {
+        name: "Carlos",
+        college: form.getFieldValue("intended_university") as string,
+        major: form.getFieldValue("intended_major") as string,
+        query: "Coding",
+      };
+      const results = await similaritiesApi.querySimilarities(similarities_payload);
+      console.info("got the similarities", results);
+
+      const college_plan = await similaritiesApi.generateCollegePlan(similarities_payload);
+      console.info("got the college plan", college_plan);
     }
   }
 
