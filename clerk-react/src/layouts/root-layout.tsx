@@ -23,7 +23,7 @@ export default function RootLayout() {
             <ul className="navbar-list">
               <li><Link to="/app">Home</Link></li>
               <SignedIn>
-                <li><Link to="/app/my-network">My Network</Link></li>
+                <li><Link to="/app/my-plan">My Plan</Link></li>
                 <li><Link to="/app/uploader">Uploader</Link></li>
                 <li><UserButton /></li>
               </SignedIn>

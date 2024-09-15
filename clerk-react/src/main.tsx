@@ -14,7 +14,7 @@ import SignUpPage from './routes/sign-up'
 import DashboardPage from './routes/dashboard'
 import ProfilePage from './routes/profile'
 import { UploaderPage } from './routes/uploader'
-import NetworkPage from './routes/network'
+import { PlanPage } from './routes/plan'
 
 const router = createBrowserRouter([
   {
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
         path: 'app',
         children: [
           { path: '/app', element: <DashboardPage /> },
-          { path: '/app/my-network', element: <NetworkPage /> },
+          { path: '/app/my-plan', element: <PlanPage /> },
           { path: '/app/uploader', element: <UploaderPage /> },
           { path: '/app/profile', element: <ProfilePage /> },
         ],
