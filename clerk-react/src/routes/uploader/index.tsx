@@ -33,7 +33,7 @@ export const UploaderPage: FC = () => {
         name: "Naisha", // Remove hardcoded value and add the "Name" input field from Clerk
         college: form.getFieldValue("intended_university") as string,
         major: form.getFieldValue("intended_major") as string,
-        query: form.getFieldValue("interests") as string
+        query: form.getFieldValue("interests").join(", ") as string
       };
       const results = await similaritiesApi.querySimilarities(similarities_payload);
       console.info("got the similarities", results);
