@@ -25,7 +25,7 @@ import requests
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer  # Import for encoding text
-import pickle
+
 # Database connection parameters
 namespace = "USER"
 port = 1972
@@ -113,11 +113,12 @@ def upload_csv():
 
         # Commit the transaction
         conn.commit()
-
         cursor.close()
         conn.close()
 
-        return jsonify({'message': 'CSV data uploaded and stored successfully'}), 200
+        return jsonify({
+            'message': 'CSV data uploaded and stored successfully',
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -183,14 +184,11 @@ def query_similarity():
             city, state = None, None
 
             parts = high_school_location_filter.split(' ', 1)
-            print(parts)
             if len(parts) == 2:
                 city, state = parts
-                print(city, state)
 
             else:
                 city = parts[0]  # Handle cases with only one part
-                print(city)
 
             scored_results = []
             for row in fetched_data:
@@ -230,6 +228,74 @@ def query_similarity():
         conn.close()
 
         return jsonify({'results': response}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/summary_statistics', methods=['POST'])
+def summary_statistics():
+    # Extract parameters from the request
+    college_query = request.form.get('college')
+    activity_query = request.form.get('query')
+    location_query = request.form.get('high_school_location')
+
+    # Connect to the database
+    conn = iris.connect(connection_string, username, password)
+    cursor = conn.cursor()
+
+    try:
+        print(f"College Query: '{college_query}'")
+        print(f"Activity Query: '{activity_query}'")
+        print(f"Location Query: '{location_query}'")
+        # Define the table name
+        tableName = "User_Profiles"
+
+        # Define the SQL query to count the number of people attending the specified college
+        total_college_count_query = f"""
+            SELECT COUNT(*) 
+            FROM {tableName}
+            WHERE College = ?
+        """
+        cursor.execute(total_college_count_query, [college_query])
+        total_college_count = cursor.fetchone()[0] if college_query else 0
+
+        # Define the SQL query to count the number of people attending the specified college and did the specified activity
+        activity_count_query = f"""
+            SELECT COUNT(*) 
+            FROM {tableName}
+            WHERE College = ? AND combined_text LIKE ?
+        """
+        cursor.execute(activity_count_query, [college_query, f'%{activity_query}%'])
+        activity_count = cursor.fetchone()[0] if college_query and activity_query else 0
+
+        # Define the SQL query to count the number of people attending the specified college and have the specified high school location
+        location_count_query = f"""
+            SELECT COUNT(*) 
+            FROM {tableName}
+            WHERE College = ? AND High_School_Location = ?
+        """
+        cursor.execute(location_count_query, [college_query, location_query])
+        location_count = cursor.fetchone()[0] if college_query and location_query else 0
+
+        # Close the connection
+        cursor.close()
+        conn.close()
+
+        if total_college_count > 0:
+            activity_percentage = (activity_count / total_college_count) * 100
+            location_percentage = (location_count / total_college_count) * 100
+        else:
+            activity_percentage = 0
+            location_percentage = 0
+
+        # Return results
+        return jsonify({
+            'total_college_count': total_college_count,
+            'activity_count': activity_count,
+            'activity_percentage': activity_percentage,
+            'location_count': location_count,
+            'location_percentage': location_percentage
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
