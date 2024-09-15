@@ -61,7 +61,7 @@ export function PlanPage() {
               Below, you'll find profiles of individuals who share similar academic interests and backgrounds. We've handpicked these pathfinders to inspire you and potentially guide your networking efforts. They represent what's possible in your field of interest and could be key connections for your academic journey.
             </p>
             <div className="pathfinders-wrapper">
-              {similarityResults.map((user: IUserCard, index: number) => (
+              {(similarityResults ?? []).map((user: IUserCard, index: number) => (
                 <UserCard key={index} user={user} />
               ))}
             </div>

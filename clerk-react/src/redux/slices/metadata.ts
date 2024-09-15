@@ -64,6 +64,8 @@ export const selectSimilaritiesResults = (state: { metadata: IMetadataState }) =
   if (!results || !results.length) {
     return [];
   }
+
+  return results.slice(0, 3);
 }
 export const selectCollegePlan = (state: { metadata: IMetadataState }) => state.metadata.college_plan.personalized_college_plan;
 export const selectCollegePlanFlag = (state: { metadata: IMetadataState }) => state.metadata.fetch_college_plan;
