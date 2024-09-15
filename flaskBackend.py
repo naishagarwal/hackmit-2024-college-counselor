@@ -42,12 +42,12 @@ def upload_csv():
         df = pd.read_csv(file)
 
         # Check if required columns exist
-        required_columns = ['id', 'extracurriculars', 'volunteering', 'awards']
+        required_columns = ['Name','College', 'Major', 'High School', 'High School Location','Extracurriculars', 'Volunteering','Awards']
         if not all(col in df.columns for col in required_columns):
             return jsonify({'error': 'Missing required columns in CSV'}), 400
 
         # Concatenate the specified columns into one column
-        df['combined_text'] = df['extracurriculars'].astype(str) + ' ' + df['volunteering'].astype(str) + ' ' + df['awards'].astype(str)
+        df['combined_text'] = df['Extracurriculars'].astype(str) + ' ' + df['Volunteering'].astype(str) + ' ' + df['Awards'].astype(str)
 
         # Encode the combined_text column into vectors
         model = SentenceTransformer('all-MiniLM-L6-v2')  # You can choose any suitable model
@@ -59,7 +59,7 @@ def upload_csv():
         cursor = conn.cursor()
 
         # Define the table name and structure
-        tableName = "Demo.IdVectors"
+        tableName = "User_Profiles"
         vector_dimension = len(df['vector'].iloc[0])  # Get the dimension of the vector
         tableDefinition = f"(id VARCHAR(255) PRIMARY KEY, combined_text VARCHAR(1000), vector VECTOR(DOUBLE, {vector_dimension}))"
 
