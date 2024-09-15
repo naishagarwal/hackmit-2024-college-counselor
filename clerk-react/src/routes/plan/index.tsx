@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { Button, Popover } from "antd";
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
 import { MdAlternateEmail as EmailIcon } from "react-icons/md";
 import { IoPricetagsOutline as TagsIcon } from "react-icons/io5";
 //
-import { selectCollegePlan, selectLoadedPlanFlag, selectSimilaritiesResults } from "../../redux/slices/metadata"
+import { selectCollegePlan, selectCollegePlanFlag, selectLoadedPlanFlag, selectSimilaritiesForm, selectSimilaritiesResults, setCollegePlan, setFetchCollegePlanFlag } from "../../redux/slices/metadata"
 import "./index.scss";
+import SimilaritiesApi from "../../apis/similarities";
 
 const tmp_aux = "https://raw.githubusercontent.com/naishagarwal/hackmit-2024-college-counselor/main/Pictures/Men/Face015.jpg";
 
@@ -39,15 +40,35 @@ const UserCard = ({ user }: { user: IUserCard }) => {
 };
 
 export function PlanPage() {
-  const navigate = useNavigate();
+  const similaritiesForm = useSelector(selectSimilaritiesForm);
   const similarityResults = useSelector(selectSimilaritiesResults) as IUserCard[];
   const collegePlan = useSelector(selectCollegePlan);
   const loadedPlanFlag = useSelector(selectLoadedPlanFlag);
+  
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const similaritiesApi = new SimilaritiesApi();
 
   useEffect(() => {
     if (loadedPlanFlag) {
       console.log("there is indeed a plan", loadedPlanFlag);
     }
+
+    async function fetchCollegePlan() {
+      console.info('similraties form is', similaritiesForm);
+      const college_plan = await similaritiesApi.generateCollegePlan({
+        name: "Naisha",
+        college: similaritiesForm?.college as string,
+        major: similaritiesForm?.major as string,
+        query: similaritiesForm?.query as string
+      });
+      console.info("got the college plan", college_plan);
+      dispatch(setCollegePlan({ plan: college_plan.personalized_college_plan }));
+      console.info("this is college plan", college_plan);
+    }
+
+    fetchCollegePlan();
   }, []);
 
   function handleGoToUploader() {
@@ -71,19 +92,14 @@ export function PlanPage() {
                 <UserCard key={index} user={user} />
               ))}
             </div>
-            {/* <div className="pathfinders-wrapper">
-              <UserCard user={{ PicLinks: "", Name: "Selina", Major: "Computer Science", College: "MIT" }} />
-              <UserCard user={{ PicLinks: "", Name: "Simon" }} />
-              <UserCard user={{ PicLinks: "", Name: "Naisha" }} />
-            </div> */}
           </div>
           <div className="custom-wrapper" style={{ marginTop: "1rem" }}>
             <h2>Your Personalized College Plan 🎓</h2>
             <p>
-              After exploring these connections, take a look at your personalized college plan below. It’s crafted based on your interests, providing tailored advice and actionable steps to help navigate your future academic career.
+              After exploring these connections, take a look at your personalized college plan below. It's crafted based on your interests, providing tailored advice and actionable steps to help navigate your future academic career.
             </p>
             <span>
-              {collegePlan}
+              {collegePlan?.personalized_college_plan || "Your college plan is being generated ..."}
             </span>
           </div>
         </>

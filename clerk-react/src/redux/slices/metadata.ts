@@ -13,9 +13,16 @@ interface IMetadataState {
     } | null;
   };
   college_plan: {
-    personalized_college_plan: string | null;
+    personalized_college_plan: any
   };
   fetch_college_plan: boolean;
+}
+
+interface ISimilaritiesForm {
+  name: string;
+  college: string;
+  major: string;
+  query: string;
 }
 
 export const initialState: IMetadataState = {
@@ -50,14 +57,14 @@ export const metadataSlice = createSlice({
       const { flag } = action.payload;
       state.fetch_college_plan = flag;
     },
-    setSimilaritiesForm: (state, action: PayloadAction<{ form: IMetadataState["similarities"]["form"] }>) => {
+    setSimilaritiesForm: (state, action: PayloadAction<{ form: ISimilaritiesForm }>) => {
       const { form } = action.payload;
       state.similarities.form = form;
     }
   }
 });
 
-export const { setLoadedPlanFlag, setSimilaritiesResults, setCollegePlan, setFetchCollegePlanFlag } = metadataSlice.actions;
+export const { setLoadedPlanFlag, setSimilaritiesResults, setCollegePlan, setFetchCollegePlanFlag, setSimilaritiesForm } = metadataSlice.actions;
 export const selectLoadedPlanFlag = (state: { metadata: IMetadataState }) => state.metadata.has_loaded_plan;
 export const selectSimilaritiesResults = (state: { metadata: IMetadataState }) => {
   const results = state.metadata.similarities.results;

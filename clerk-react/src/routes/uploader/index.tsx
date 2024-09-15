@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import "swiper/css";
 //
 import { SignInWithLinkedinBtn } from "./components/linkedin-btn";
-import { setFetchCollegePlanFlag, setLoadedPlanFlag, setSimilaritiesResults } from "../../redux/slices/metadata";
+import { setSimilaritiesForm, setFetchCollegePlanFlag, setLoadedPlanFlag, setSimilaritiesResults } from "../../redux/slices/metadata";
 import SimilaritiesApi from "../../apis/similarities";
 import "./index.scss";
 
@@ -38,6 +38,7 @@ export const UploaderPage: FC = () => {
       const results = await similaritiesApi.querySimilarities(similarities_payload);
       console.info("got the similarities", results);
       dispatch(setSimilaritiesResults({ results: results.results }));
+      dispatch(setSimilaritiesForm({ form: similarities_payload }));
       setProcessing(false);
       dispatch(setFetchCollegePlanFlag({ flag: true }));
     }
@@ -77,7 +78,7 @@ export const UploaderPage: FC = () => {
         </SwiperSlide>
         <SwiperSlide className="swiper-slide custom-wrapper">
           <div className="form-question">
-            <h2>Hi Carlos!</h2>
+            <h2>Hi Naisha!</h2>
             <p>Let's get started by filling out some basic information about yourself.</p>
             <h3>
               What's your intended university?
