@@ -2,8 +2,6 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
 
-
-
 app = Flask(__name__)
 CORS(app)
 
@@ -11,96 +9,140 @@ CORS(app)
 def homepage():
     return render_template('index.html') 
 
-
 ####################################################################################################
-##CONNECTING THE IRIS DATABASE
-# https://docs.intersystems.com/irislatest/csp/docbook/DocBook.UI.Page.cls?KEY=BPYNAT_pyapi
+## CONNECTING TO THE IRIS DATABASE
 
 import iris
 import json
+import time
+import numpy as np
+import pandas as pd
+from sentence_transformers import SentenceTransformer  # Import for encoding text
 
-namespace="USER"
+# Database connection parameters
+namespace = "USER"
 port = os.getenv("DATABASE_PORT", "1972")
-hostname= os.getenv("DATABASE_HOST", "localhost")
+hostname = os.getenv("DATABASE_HOST", "localhost")
 connection_string = f"{hostname}:{port}/{namespace}"
 username = "demo"
 password = "demo"
 
+# First Endpoint: Upload and process CSV file
+@app.route('/upload_csv', methods=['POST'])
+def upload_csv():
+    # Get the file from the request
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in the request'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
 
-# CRUD operations
-# table name must always be in A.B format. Otherwise SQLUser will get prefixed by default when the table is created 
-# example tablename = project.tableName
-# example schema = (myvarchar VARCHAR(255), myint INTEGER, myfloat FLOAT)
-@app.route('/create', methods=['POST'])
-def create():
-    tableName = request.json.get('tableName')
-    schema = request.json.get('schema')
-    # print("trying connection string: ", connection_string, flush=True) # useful for debugging
-    conn = iris.connect(connection_string, username, password)
-    cursor = conn.cursor()
     try:
-        cursor.execute(f"DROP TABLE {tableName}")
-    except Exception as inst:
-        # Ignore the error thrown when no table exists
-        pass
+        # Read the CSV file into a DataFrame
+        df = pd.read_csv(file)
+
+        # Check if required columns exist
+        required_columns = ['id', 'extracurriculars', 'volunteering', 'awards']
+        if not all(col in df.columns for col in required_columns):
+            return jsonify({'error': 'Missing required columns in CSV'}), 400
+
+        # Concatenate the specified columns into one column
+        df['combined_text'] = df['extracurriculars'].astype(str) + ' ' + df['volunteering'].astype(str) + ' ' + df['awards'].astype(str)
+
+        # Encode the combined_text column into vectors
+        model = SentenceTransformer('all-MiniLM-L6-v2')  # You can choose any suitable model
+        vectors = model.encode(df['combined_text'].tolist())
+        df['vector'] = vectors.tolist()
+
+        # Connect to the database
+        conn = iris.connect(connection_string, username, password)
+        cursor = conn.cursor()
+
+        # Define the table name and structure
+        tableName = "Demo.IdVectors"
+        vector_dimension = len(df['vector'].iloc[0])  # Get the dimension of the vector
+        tableDefinition = f"(id VARCHAR(255) PRIMARY KEY, combined_text VARCHAR(1000), vector VECTOR(DOUBLE, {vector_dimension}))"
+
+        # Drop the table if it exists
+        cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
+
+        # Create the table
+        cursor.execute(f"CREATE TABLE {tableName} {tableDefinition}")
+
+        # Prepare the SQL insert statement
+        sql = f"INSERT INTO {tableName} (id, combined_text, vector) VALUES (?, ?, ?)"
+
+        # Insert data into the table
+        data_to_insert = []
+        for index, row in df.iterrows():
+            data_to_insert.append((row['id'], row['combined_text'], row['vector']))
+
+        # Use executemany for efficient bulk insertion
+        cursor.executemany(sql, data_to_insert)
+
+        # Commit the transaction
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'message': 'CSV data uploaded and stored successfully'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Second Endpoint: User query and similarity search
+@app.route('/query_similarity', methods=['POST'])
+def query_similarity():
     try:
-        cursor.execute(f"CREATE TABLE {tableName} {schema}")
-    except Exception as inst:
-        return jsonify({"response": str(inst)})
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return jsonify({"response": "table created"})
+        # Get the user query from the request
+        user_query = request.json.get('query')
+        if not user_query:
+            return jsonify({'error': 'No query provided'}), 400
 
-@app.route('/getall', methods=['POST'])
-def getall():
-    tableName = request.json.get('tableName')
-    conn = iris.connect(connection_string, username, password)
-    cursor = conn.cursor()
-    try:
-        cursor.execute(f"Select * From {tableName}")
-        data = cursor.fetchall()
-    except Exception as inst:
-        return jsonify({"response": str(inst)})
-    cursor.close()
-    conn.commit()
-    conn.close()
-    print(data)
-    return jsonify({"response": data})
+        number_of_results = request.json.get('numberOfResults', 10)
 
+        # Encode the query into a vector with normalization
+        query_vector = model.encode(user_query, normalize_embeddings=True).tolist()
 
-# Example usage:
-# query = "Insert into Sample.Person (name, phone) values (?, ?)"
-# params = [('ABC', '123-456-7890'), ('DEF', '234-567-8901'), ('GHI', '345-678-9012')]
-# cursor.executemany(query, params) // batch update
-@app.route('/insert', methods=['POST'])
-def insert():
-    tableName = request.json.get('tableName')
-    columns = request.json.get('columns')
-    data = request.json.get('data')
-    json_compatible_string = data.replace("(", "[").replace(")", "]").replace("'", '"')
-    data = json.loads(json_compatible_string)
-    qMarks = "("
-    for i in range(len(data[0])):
-        if i == len(data[0])-1:
-            qMarks = qMarks+"?)"
-            break
-        qMarks = qMarks+"?,"
-    query = f"INSERT INTO {tableName} {columns} VALUES {qMarks}"
-    conn = iris.connect(connection_string, username, password)
-    cursor = conn.cursor()
-    try:
-        cursor.executemany(query, data)
-    except Exception as inst:
-        return jsonify({"response": str(inst)}) 
-    cursor.close()
-    conn.commit()
-    conn.close()
-    return jsonify({"response": "new information added"})
+        # Convert the vector to a string representation suitable for TO_VECTOR
+        query_vector_str = str(query_vector)
 
+        # Connect to the database
+        conn = iris.connect(connection_string, username, password)
+        cursor = conn.cursor()
 
+        # Define the table name
+        tableName = "Demo.IdVectors"
+
+        # Prepare the SQL query
+        sql = f"""
+        SELECT TOP ? id, combined_text
+        FROM {tableName}
+        ORDER BY VECTOR_DOT_PRODUCT(vector, TO_VECTOR(?)) DESC
+        """
+
+        # Execute the SQL query
+        cursor.execute(sql, [number_of_results, query_vector_str])
+        fetched_data = cursor.fetchall()
+
+        # Prepare the response
+        response = []
+        for row in fetched_data:
+            response.append({
+                'id': row[0],
+                'combined_text': row[1]
+            })
+
+        # Close the connection
+        cursor.close()
+        conn.commit()
+        conn.close()
+
+        return jsonify({'results': response}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0', port=5010)
-
-
+    app.run(debug=True, host='0.0.0.0', port=5010)
