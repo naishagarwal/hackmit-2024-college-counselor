@@ -5,9 +5,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/')
-def homepage():
-    return render_template('index.html') 
+#@app.route('/')
+# def homepage():
+#     return render_template('index.html') 
 
 ####################################################################################################
 ## CONNECTING TO THE IRIS DATABASE
@@ -31,6 +31,10 @@ password = "demo"
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     # Get the file from the request
+    #print("got here")
+    print("Headers:", request.headers)
+    print("Form Data:", request.form)
+    print("Files:", request.files)
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
     file = request.files['file']
@@ -54,6 +58,8 @@ def upload_csv():
         vectors = model.encode(df['combined_text'].tolist())
         df['vector'] = vectors.tolist()
 
+        df['vector'] = df['vector'].apply(lambda x: json.dumps(x))
+
         # Connect to the database
         conn = iris.connect(connection_string, username, password)
         cursor = conn.cursor()
@@ -61,7 +67,15 @@ def upload_csv():
         # Define the table name and structure
         tableName = "User_Profiles"
         vector_dimension = len(df['vector'].iloc[0])  # Get the dimension of the vector
-        tableDefinition = f"(id VARCHAR(255) PRIMARY KEY, combined_text VARCHAR(1000), vector VECTOR(DOUBLE, {vector_dimension}))"
+        tableDefinition = """
+            (Name VARCHAR(255) PRIMARY KEY, 
+            College VARCHAR(255), 
+            Major VARCHAR(255), 
+            High_School VARCHAR(255), 
+            High_School_Location VARCHAR(255), 
+            combined_text VARCHAR(1000), 
+            vector TEXT)"""
+
 
         # Drop the table if it exists
         cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
@@ -70,12 +84,18 @@ def upload_csv():
         cursor.execute(f"CREATE TABLE {tableName} {tableDefinition}")
 
         # Prepare the SQL insert statement
-        sql = f"INSERT INTO {tableName} (id, combined_text, vector) VALUES (?, ?, ?)"
+        sql = """
+            INSERT INTO User_Profiles 
+            (Name, College, Major, High_School, High_School_Location, combined_text, vector) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+
+        #sql = f"INSERT INTO {tableName} (Name, College, Major, High School, High School Location, combined_text, vector) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
         # Insert data into the table
         data_to_insert = []
         for index, row in df.iterrows():
-            data_to_insert.append((row['id'], row['combined_text'], row['vector']))
+            data_to_insert.append((row['Name'], row['College'], row['Major'], row['High School'], row['High School Location'], row['combined_text'], row['vector']))
 
         # Use executemany for efficient bulk insertion
         cursor.executemany(sql, data_to_insert)
