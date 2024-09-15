@@ -114,22 +114,23 @@ def upload_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Second Endpoint: User query and similarity search
 @app.route('/query_similarity', methods=['POST'])
 def query_similarity():
     try:
         # Get the user query and filters from the request
         user_query = request.json.get('query')
-        college = request.json.get('college', None)
-        high_school_location = request.json.get('high_school_location', None)
-        major = request.json.get('major', None)
-        number_of_results = request.json.get('numberOfResults', 10)
-
+        college_filter = request.json.get('college') 
+        major_filter = request.json.get('major') 
+        
         if not user_query:
             return jsonify({'error': 'No query provided'}), 400
 
+        number_of_results = request.json.get('numberOfResults', 10)
+
         # Encode the query into a vector with normalization
         query_vector = model.encode(user_query, normalize_embeddings=True).tolist()
+
+        # Convert the vector to a string representation suitable for TO_VECTOR
         query_vector_str = str(query_vector)
 
         # Connect to the database
@@ -139,35 +140,25 @@ def query_similarity():
         # Define the table name
         tableName = "User_Profiles"
 
-        # Base SQL query
+        # Build the base SQL query
         sql = f"""
-        SELECT TOP ? Name, College, High_School_Location, Major, combined_text,
-               VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) AS similarity_score
+        SELECT TOP ? Name, College, High_School_Location, Major, combined_text
         FROM {tableName}
+        WHERE 1=1
         """
 
-        # Add filtering conditions dynamically
-        filters = []
-        params = [number_of_results, query_vector_str]
+        # Add filters if provided
+        params = [number_of_results]  # Initialize parameters with number of results
+        if college_filter:
+            sql += " AND College = ?"
+            params.append(college_filter)
+        if major_filter:
+            sql += " AND Major = ?"
+            params.append(major_filter)
 
-        if college:
-            filters.append("College = ?")
-            params.append(college)
-        
-        if high_school_location:
-            filters.append("High_School_Location = ?")
-            params.append(high_school_location)
-        
-        if major:
-            filters.append("Major = ?")
-            params.append(major)
-
-        # If there are filters, append them to the SQL query
-        if filters:
-            sql += " WHERE " + " AND ".join(filters)
-
-        # Add ORDER BY clause to rank by similarity
-        sql += " ORDER BY similarity_score DESC"
+        # Add similarity ordering
+        sql += " ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC"
+        params.append(query_vector_str)  # Add query vector to parameters
 
         # Execute the SQL query
         cursor.execute(sql, params)
@@ -182,12 +173,10 @@ def query_similarity():
                 'High_School_Location': row[2],
                 'Major': row[3],
                 'combined_text': row[4],
-                'similarity_score': row[5]
             })
 
         # Close the connection
         cursor.close()
-        conn.commit()
         conn.close()
 
         return jsonify({'results': response}), 200
