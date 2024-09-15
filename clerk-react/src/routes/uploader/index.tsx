@@ -43,7 +43,7 @@ export const UploaderPage: FC = () => {
       >
         <Swiper className="swiper-wrapper" onSwiper={setSwiperIns}>
           <SwiperSlide className="swiper-slide custom-wrapper">
-            <h1>Let"s get started!</h1>
+            <h1>Let's get started!</h1>
             <p>
               To help us build your personalized college plan, connect your LinkedIn profile. This way, we can gather key info like your education, work experience, and skills. Don’t worry, you’ll be able to review and tweak everything before we move ahead.
             </p>
@@ -52,9 +52,9 @@ export const UploaderPage: FC = () => {
           <SwiperSlide className="swiper-slide custom-wrapper">
             <div className="form-question">
               <h2>Hi Carlos!</h2>
-              <p>Let"s get started by filling out some basic information about yourself.</p>
+              <p>Let's get started by filling out some basic information about yourself.</p>
               <h3>
-                What"s your intended university?
+                What's your intended university?
               </h3>
               <div className="form-question">
                 <Form.Item name="intended_university">
@@ -79,7 +79,7 @@ export const UploaderPage: FC = () => {
           </SwiperSlide>
           <SwiperSlide className="swiper-slide custom-wrapper">
             <div className="form-question">
-              <h2>Great! Now let"s talk about your high school experience.</h2>
+              <h2>Great! Now let's talk about your high school experience.</h2>
               <p>Please tell us about your high school</p>
               <Form.Item name="high_school_name">
                 <Input placeholder="High School Name" size="large" />
@@ -97,13 +97,13 @@ export const UploaderPage: FC = () => {
               <h2 onClick={auxProcessingClick}>Thank you!</h2>
               {processing ? (
                 <>
-                  <p>We"re getting your network and college plan ready. Hang tight!</p>
+                  <p>We're getting your network and college plan ready. Hang tight!</p>
                   <span>cool loading indicator here ...</span>
                 </>
               ) : (
                 <>
                   <p>
-                    We"re ready with your network and college plan. Click below to view your results.
+                    We're ready with your network and college plan. Click below to view your results.
                   </p>
                   <Button type="primary" size="large" htmlType="submit" onClick={goToResults}>
                     View results

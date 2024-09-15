@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-//
-import LinkedInApi from "../../../apis/linkedin";
 import { Button } from "antd";
+//
+import linkedin_logo from "../../../assets/linkedin.png";
+import LinkedInApi from "../../../apis/linkedin";
 //
 const CLIENT_ID = "78qinz0gzw4aut";
 const REDIRECT_URI = "http://localhost:5173/app/uploader";
@@ -35,6 +36,7 @@ export const SignInWithLinkedinBtn = () => {
 
   return (
     <Button size="large" id="linkedin-signin" onClick={handleConnectionClick}>
+      <img src={linkedin_logo} alt="linkedin" />
       Connect with LinkedIn
     </Button>
   )
