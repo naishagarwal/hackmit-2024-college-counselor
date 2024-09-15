@@ -4,7 +4,8 @@ import os
 import openai
 from fuzzywuzzy import process, fuzz
 
-openai.api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
+#replace with your own
+openai.api_key = '<API_KEY>'
 
 app = Flask(__name__)
 #CORS(app)
@@ -24,7 +25,7 @@ import requests
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer  # Import for encoding text
-import pickle
+
 # Database connection parameters
 namespace = "USER"
 port = 1972
@@ -49,7 +50,10 @@ def upload_csv():
         df = pd.read_csv(file)
 
         # Check if required columns exist
-        required_columns = ['Name', 'College', 'Major', 'High_School', 'High_School_Location', 'Extracurriculars', 'Volunteering', 'Awards', 'Email']
+        required_columns = [
+            'Name', 'College', 'Major', 'High_School', 'High_School_Location', 
+            'Extracurriculars', 'Volunteering', 'Awards', 'Email', 'Gender', 'PicLinks'
+        ]
         if not all(col in df.columns for col in required_columns):
             return jsonify({'error': 'Missing required columns in CSV'}), 400
 
@@ -74,9 +78,12 @@ def upload_csv():
             High_School VARCHAR(255), 
             High_School_Location VARCHAR(255), 
             Email VARCHAR(255),
+            Gender VARCHAR(50),
+            PicLinks VARCHAR(255),
             combined_text VARCHAR(1000), 
             combined_text_vector VECTOR(DOUBLE, {vector_dimension}))
         """
+
 
         # Drop the table if it exists
         try:
@@ -90,9 +97,10 @@ def upload_csv():
         # Prepare the SQL insert statement
         sql = f"""
             INSERT INTO {tableName}
-            (Name, College, Major, High_School, High_School_Location, Email, combined_text, combined_text_vector) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, TO_VECTOR(?))
+            (Name, College, Major, High_School, High_School_Location, Email, Gender, PicLinks, combined_text, combined_text_vector) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TO_VECTOR(?))
         """
+
 
         # Insert data into the table
         start_time = time.time()
@@ -104,19 +112,23 @@ def upload_csv():
                 row['High_School'],
                 row['High_School_Location'],
                 row['Email'],
+                row['Gender'],
+                row['PicLinks'],
                 row['combined_text'],
                 json.dumps(row['combined_text_vector'])  # Convert vector to JSON string
             ])
+
         end_time = time.time()
         print(f"time taken to add {len(df)} entries: {end_time - start_time} seconds")
 
         # Commit the transaction
         conn.commit()
-
         cursor.close()
         conn.close()
 
-        return jsonify({'message': 'CSV data uploaded and stored successfully'}), 200
+        return jsonify({
+            'message': 'CSV data uploaded and stored successfully',
+        }), 200
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -156,7 +168,7 @@ def query_similarity():
 
         # Build the base SQL query
         sql = f"""
-        SELECT TOP ? Name, College, High_School_Location, Major, combined_text, Email
+        SELECT TOP ? Name, College, High_School_Location, Major, Gender, PicLinks, combined_text, Email
         FROM {tableName}
         WHERE 1=1
         """
@@ -182,14 +194,11 @@ def query_similarity():
             city, state = None, None
 
             parts = high_school_location_filter.split(' ', 1)
-            print(parts)
             if len(parts) == 2:
                 city, state = parts
-                print(city, state)
 
             else:
                 city = parts[0]  # Handle cases with only one part
-                print(city)
 
             scored_results = []
             for row in fetched_data:
@@ -220,9 +229,12 @@ def query_similarity():
                 'College': row[1],
                 'High_School_Location': row[2],
                 'Major': row[3],
-                'combined_text': row[4],
-                'Email': row[5]  
+                'Gender': row[4],
+                'PicLinks': row[5],
+                'combined_text': row[6],
+                'Email': row[7]  
             })
+
 
         # Close the connection
         cursor.close()
@@ -233,6 +245,90 @@ def query_similarity():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+
+@app.route('/summary_statistics', methods=['POST'])
+def summary_statistics():
+    # Extract parameters from the request JSON body
+    college_query = request.json.get('college')
+    activity_query = request.json.get('query')
+    location_query = request.json.get('high_school_location')
+
+    # Connect to the database
+    conn = iris.connect(connection_string, username, password)
+    cursor = conn.cursor()
+
+    try:
+        print(f"College Query: '{college_query}'")
+        print(f"Activity Query: '{activity_query}'")
+        print(f"Location Query: '{location_query}'")
+        # Define the table name
+        tableName = "User_Profiles"
+
+        # Define the SQL query to count the number of people attending the specified college
+        total_college_count_query = f"""
+            SELECT COUNT(*) 
+            FROM {tableName}
+            WHERE College = ?
+        """
+
+        cursor.execute(total_college_count_query, [college_query])
+        result = cursor.fetchone()
+        total_college_count = result[0] if result else 0  # Ensure it gets the correct integer value
+
+        # Define the SQL query to count the number of people attending the specified college and did the specified activity
+        activity_count_query = f"""
+            SELECT COUNT(*) 
+            FROM {tableName}
+            WHERE College = ? AND combined_text LIKE ?
+        """
+
+        cursor.execute(activity_count_query, [college_query, f'%{activity_query}%'])
+        result = cursor.fetchone()
+        activity_count = result[0] if result else 0  # Ensure it gets the correct integer value
+
+        # Define the SQL query to count the number of people attending the specified college and have the specified high school location
+        location_count_query = f"""
+            SELECT COUNT(*) 
+            FROM {tableName}
+            WHERE College = ? AND High_School_Location = ?
+        """
+        
+        cursor.execute(location_count_query, [college_query, location_query])
+        result = cursor.fetchone()
+        location_count = result[0] if result else 0  # Ensure it gets the correct integer value
+
+        # Close the connection
+        cursor.close()
+        conn.close()
+
+        print(total_college_count)
+        print(activity_count)
+        print(location_count)
+        
+        total_college_count = total_college_count[0]
+        activity_count = activity_count[0]
+        location_count = location_count[0]
+
+        if total_college_count > 0:
+            activity_percentage = (activity_count / total_college_count) * 100
+            location_percentage = (location_count / total_college_count) * 100
+        else:
+            activity_percentage = 0
+            location_percentage = 0
+
+        # Return results
+        return jsonify({
+            'total_college_count': total_college_count,
+            'activity_count': activity_count,
+            'activity_percentage': activity_percentage,
+            'location_count': location_count,
+            'location_percentage': location_percentage
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/generate_college_plan', methods=['POST'])
 def generate_college_plan():
     try:
