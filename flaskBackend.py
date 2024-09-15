@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
+import openai
 
 app = Flask(__name__)
 CORS(app)
@@ -43,7 +44,7 @@ def upload_csv():
         df = pd.read_csv(file)
 
         # Check if required columns exist
-        required_columns = ['Name', 'College', 'Major', 'High School', 'High School Location', 'Extracurriculars', 'Volunteering', 'Awards']
+        required_columns = ['Name', 'College', 'Major', 'High_School', 'High_School_Location', 'Extracurriculars', 'Volunteering', 'Awards']
         if not all(col in df.columns for col in required_columns):
             return jsonify({'error': 'Missing required columns in CSV'}), 400
 
@@ -53,23 +54,22 @@ def upload_csv():
 
         # Add the embeddings to the DataFrame
         df['combined_text_vector'] = embeddings.tolist()
+        vector_dimension = len(df['combined_text_vector'].iloc[0])
 
         # Connect to the database
         conn = iris.connect(connection_string, username, password)
         cursor = conn.cursor()
 
         # Define the table name and structure
-        tableName = "Test.Upload"
-        tableDefinition = """
+        tableName = "User_Profiles"
+        tableDefinition = f"""
             (Name VARCHAR(255), 
             College VARCHAR(255), 
             Major VARCHAR(255), 
             High_School VARCHAR(255), 
             High_School_Location VARCHAR(255), 
-            Extracurriculars VARCHAR(255), 
-            Volunteering VARCHAR(255), 
-            Awards VARCHAR(255), 
-            combined_text_vector VECTOR)
+            combined_text VARCHAR(1000), 
+            combined_text_vector VECTOR(DOUBLE, {vector_dimension}))
         """
 
         # Drop the table if it exists
@@ -82,10 +82,10 @@ def upload_csv():
         cursor.execute(f"CREATE TABLE {tableName} {tableDefinition}")
 
         # Prepare the SQL insert statement
-        sql = """
-            INSERT INTO Test.Upload 
-            (Name, College, Major, High_School, High_School_Location, Extracurriculars, Volunteering, Awards, combined_text_vector) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, TO_VECTOR(?))
+        sql = f"""
+            INSERT INTO {tableName}
+            (Name, College, Major, High_School, High_School_Location, combined_text, combined_text_vector) 
+            VALUES (?, ?, ?, ?, ?, ?, TO_VECTOR(?))
         """
 
         # Insert data into the table
@@ -95,11 +95,9 @@ def upload_csv():
                 row['Name'],
                 row['College'],
                 row['Major'],
-                row['High School'],
-                row['High School Location'],
-                row['Extracurriculars'],
-                row['Volunteering'],
-                row['Awards'],
+                row['High_School'],
+                row['High_School_Location'],
+                row['combined_text'],
                 json.dumps(row['combined_text_vector'])  # Convert vector to JSON string
             ])
         end_time = time.time()
@@ -116,62 +114,69 @@ def upload_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Second Endpoint: User query and similarity search
+@app.route('/query_similarity', methods=['POST'])
+def query_similarity():
+    try:
+        # Get the user query from the request
+        user_query = request.json.get('query')
+        college_filter = request.json.get('college') 
+        if not user_query:
+            return jsonify({'error': 'No query provided'}), 400
+
+        number_of_results = request.json.get('numberOfResults', 10)
+
+        # Encode the query into a vector with normalization
+        query_vector = model.encode(user_query, normalize_embeddings=True).tolist()
+
+        # Convert the vector to a string representation suitable for TO_VECTOR
+        query_vector_str = str(query_vector)
+
+        # Connect to the database
+        conn = iris.connect(connection_string, username, password)
+        cursor = conn.cursor()
+
+        # Define the table name
+        tableName = "User_Profiles"
+
+        # Prepare the SQL query
+        if college_filter:
+            sql = f"""
+            SELECT TOP ? Name, combined_text
+            FROM {tableName}
+            WHERE College = ?
+            ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
+            """
+            cursor.execute(sql, [number_of_results, college_filter, query_vector_str])
+        else:
+            sql = f"""
+            SELECT TOP ? Name, combined_text
+            FROM {tableName}
+            ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
+            """
+            # Execute the SQL query
+            cursor.execute(sql, [number_of_results, query_vector_str])
+
+        fetched_data = cursor.fetchall()
+
+        # Prepare the response
+        response = []
+        for row in fetched_data:
+            response.append({
+                'Name': row[0],
+                'combined_text': row[1]
+            })
+
+        # Close the connection
+        cursor.close()
+        conn.commit()
+        conn.close()
+
+        return jsonify({'results': response}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5010)
-
-
-# # Second Endpoint: User query and similarity search
-# @app.route('/query_similarity', methods=['POST'])
-# def query_similarity():
-#     try:
-#         # Get the user query from the request
-#         user_query = request.json.get('query')
-#         if not user_query:
-#             return jsonify({'error': 'No query provided'}), 400
-
-#         number_of_results = request.json.get('numberOfResults', 10)
-
-#         # Encode the query into a vector with normalization
-#         query_vector = model.encode(user_query, normalize_embeddings=True).tolist()
-
-#         # Convert the vector to a string representation suitable for TO_VECTOR
-#         query_vector_str = str(query_vector)
-
-#         # Connect to the database
-#         conn = iris.connect(connection_string, username, password)
-#         cursor = conn.cursor()
-
-#         # Define the table name
-#         tableName = "Demo.IdVectors"
-
-#         # Prepare the SQL query
-#         sql = f"""
-#         SELECT TOP ? id, combined_text
-#         FROM {tableName}
-#         ORDER BY VECTOR_DOT_PRODUCT(vector, TO_VECTOR(?)) DESC
-#         """
-
-#         # Execute the SQL query
-#         cursor.execute(sql, [number_of_results, query_vector_str])
-#         fetched_data = cursor.fetchall()
-
-#         # Prepare the response
-#         response = []
-#         for row in fetched_data:
-#             response.append({
-#                 'id': row[0],
-#                 'combined_text': row[1]
-#             })
-
-#         # Close the connection
-#         cursor.close()
-#         conn.commit()
-#         conn.close()
-
-#         return jsonify({'results': response}), 200
-
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
-# if __name__ == '__main__':
-#     app.run(debug=True, host='0.0.0.0', port=5010)
