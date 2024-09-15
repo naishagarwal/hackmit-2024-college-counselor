@@ -4,7 +4,8 @@ import os
 import openai
 from fuzzywuzzy import process, fuzz
 
-openai.api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
+#replace with your own
+openai.api_key = '<API_KEY>'
 
 app = Flask(__name__)
 #CORS(app)
