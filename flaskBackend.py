@@ -135,13 +135,13 @@ def query_similarity():
         cursor = conn.cursor()
 
         # Define the table name
-        tableName = "Test.Upload"
+        tableName = "User_Profiles"
 
         # Prepare the SQL query
         sql = f"""
-        SELECT TOP ? id, combined_text
+        SELECT TOP ? Name, combined_text
         FROM {tableName}
-        ORDER BY VECTOR_DOT_PRODUCT(vector, TO_VECTOR(?)) DESC
+        ORDER BY VECTOR_DOT_PRODUCT(combined_text_vector, TO_VECTOR(?)) DESC
         """
 
         # Execute the SQL query
@@ -152,8 +152,8 @@ def query_similarity():
         response = []
         for row in fetched_data:
             response.append({
-                'Name': row['Name'],
-                'combined_text': row['combined_text']
+                'Name': row[0],
+                'combined_text': row[1]
             })
 
         # Close the connection
