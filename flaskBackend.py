@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
 import openai
+from fuzzywuzzy import process, fuzz
+
 openai.api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
 
 app = Flask(__name__)
@@ -119,6 +121,11 @@ def upload_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def get_best_match(value, choices):
+    """Get the best match for `value` from a list of `choices` using fuzzy matching."""
+    best_match, best_score = process.extractOne(value, choices, scorer=fuzz.partial_ratio)
+    return best_match if best_score > 70 else None
+
 @app.route('/query_similarity', methods=['POST'])
 def query_similarity():
     try:
@@ -127,6 +134,7 @@ def query_similarity():
         college_filter = request.json.get('college') 
         major_filter = request.json.get('major') 
         user_name = request.json.get('name')
+        high_school_location_filter = request.json.get('high_school_location')  # Get high school location filter
         
         if not user_query:
             return jsonify({'error': 'No query provided'}), 400
@@ -169,6 +177,40 @@ def query_similarity():
         # Execute the SQL query
         cursor.execute(sql, params)
         fetched_data = cursor.fetchall()
+
+        if high_school_location_filter:
+            city, state = None, None
+
+            parts = high_school_location_filter.split(' ', 1)
+            print(parts)
+            if len(parts) == 2:
+                city, state = parts
+                print(city, state)
+
+            else:
+                city = parts[0]  # Handle cases with only one part
+                print(city)
+
+            scored_results = []
+            for row in fetched_data:
+                row_location = row[2].split(' ')
+                row_city = row_location[0] if len(row_location) > 0 else ''
+                row_state = row_location[1] if len(row_location) > 1 else ''
+                
+                score = 0
+                if city and get_best_match(city, [row_city]):
+                    score += 50
+                if state and get_best_match(state, [row_state]):
+                    score += 50
+                
+                scored_results.append((*row, score))  # Append score to the row
+            
+            # Sort by score, descending
+            scored_results.sort(key=lambda x: x[-1], reverse=True)
+
+            # Keep the top results based on location score
+            fetched_data = scored_results[:number_of_results]
+
 
         # Prepare the response
         response = []
