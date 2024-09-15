@@ -18,7 +18,7 @@ import time
 import numpy as np
 import pandas as pd
 from sentence_transformers import SentenceTransformer  # Import for encoding text
-
+import pickle
 # Database connection parameters
 namespace = "USER"
 port = 1972
@@ -26,6 +26,9 @@ hostname = os.getenv('IRIS_HOSTNAME', 'localhost')
 connection_string = f"{hostname}:{port}/{namespace}"
 username = "demo"
 password = "demo"
+
+model = SentenceTransformer('all-MiniLM-L6-v2') 
+
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     # Ensure a file is uploaded
@@ -44,6 +47,13 @@ def upload_csv():
         if not all(col in df.columns for col in required_columns):
             return jsonify({'error': 'Missing required columns in CSV'}), 400
 
+        # Generate embeddings for the combined text
+        df['combined_text'] = df['Extracurriculars'].astype(str) + ' ' + df['Volunteering'].astype(str) + ' ' + df['Awards'].astype(str)
+        embeddings = model.encode(df['combined_text'].tolist(), normalize_embeddings=True)
+
+        # Add the embeddings to the DataFrame
+        df['combined_text_vector'] = embeddings.tolist()
+
         # Connect to the database
         conn = iris.connect(connection_string, username, password)
         cursor = conn.cursor()
@@ -54,18 +64,19 @@ def upload_csv():
             (Name VARCHAR(255), 
             College VARCHAR(255), 
             Major VARCHAR(255), 
-            HSL VARCHAR(255), 
-            HSL_Location VARCHAR(255), 
-            EXTRAC VARCHAR(255), 
-            Volun VARCHAR(255), 
-            Awards VARCHAR(255))
+            High_School VARCHAR(255), 
+            High_School_Location VARCHAR(255), 
+            Extracurriculars VARCHAR(255), 
+            Volunteering VARCHAR(255), 
+            Awards VARCHAR(255), 
+            combined_text_vector VECTOR)
         """
 
         # Drop the table if it exists
         try:
             cursor.execute(f"DROP TABLE {tableName}")
-        except Exception as e:
-            print(f"Warning: Could not drop table. Error: {e}")
+        except:
+            pass
 
         # Create the table
         cursor.execute(f"CREATE TABLE {tableName} {tableDefinition}")
@@ -73,22 +84,23 @@ def upload_csv():
         # Prepare the SQL insert statement
         sql = """
             INSERT INTO Test.Upload 
-            (Name, College, Major, HSL, HSL_Location, EXTRAC, Volun, Awards) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (Name, College, Major, High_School, High_School_Location, Extracurriculars, Volunteering, Awards, combined_text_vector) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, TO_VECTOR(?))
         """
 
         # Insert data into the table
         start_time = time.time()
         for index, row in df.iterrows():
             cursor.execute(sql, [
-                row['Name'], 
-                row['College'], 
-                row['Major'], 
-                row['High School'], 
-                row['High School Location'], 
-                row['Extracurriculars'], 
-                row['Volunteering'], 
-                row['Awards']
+                row['Name'],
+                row['College'],
+                row['Major'],
+                row['High School'],
+                row['High School Location'],
+                row['Extracurriculars'],
+                row['Volunteering'],
+                row['Awards'],
+                json.dumps(row['combined_text_vector'])  # Convert vector to JSON string
             ])
         end_time = time.time()
         print(f"time taken to add {len(df)} entries: {end_time - start_time} seconds")
