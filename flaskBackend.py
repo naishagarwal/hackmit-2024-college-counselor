@@ -46,7 +46,7 @@ def upload_csv():
         df = pd.read_csv(file)
 
         # Check if required columns exist
-        required_columns = ['Name','College', 'Major', 'High School', 'High School Location','Extracurriculars', 'Volunteering','Awards']
+        required_columns = ['Name','College', 'Major', 'High_School', 'High_School_Location','Extracurriculars', 'Volunteering','Awards']
         if not all(col in df.columns for col in required_columns):
             return jsonify({'error': 'Missing required columns in CSV'}), 400
 
@@ -59,6 +59,7 @@ def upload_csv():
         df['vector'] = vectors.tolist()
 
         df['vector'] = df['vector'].apply(lambda x: json.dumps(x))
+        print(df.head())
 
         # Connect to the database
         conn = iris.connect(connection_string, username, password)
@@ -67,6 +68,7 @@ def upload_csv():
         # Define the table name and structure
         tableName = "User_Profiles"
         vector_dimension = len(df['vector'].iloc[0])  # Get the dimension of the vector
+        #tableDefinition = "(Name VARCHAR(255), College VARCHAR(255), Major VARCHAR(255), HSL VARCHAR(255), EXTRAC VARCHAR(255), Volun VARCHAR(255), Awards VARCHAR(255), unn VARCHAR(255))"
         tableDefinition = """
             (Name VARCHAR(255) PRIMARY KEY, 
             College VARCHAR(255), 
@@ -79,9 +81,11 @@ def upload_csv():
 
         # Drop the table if it exists
         cursor.execute(f"DROP TABLE IF EXISTS {tableName}")
+        print("got here sdf")
 
         # Create the table
         cursor.execute(f"CREATE TABLE {tableName} {tableDefinition}")
+        print("sdfsdf")
 
         # Prepare the SQL insert statement
         sql = """
@@ -93,12 +97,17 @@ def upload_csv():
         #sql = f"INSERT INTO {tableName} (Name, College, Major, High School, High School Location, combined_text, vector) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
         # Insert data into the table
-        data_to_insert = []
-        for index, row in df.iterrows():
-            data_to_insert.append((row['Name'], row['College'], row['Major'], row['High School'], row['High School Location'], row['combined_text'], row['vector']))
+        # data_to_insert = []
+        # for index, row in df.iterrows():
+        #     data_to_insert.append((row['Name'], row['College'], row['Major'], row['High_School'], row['High_School_Location'], row['combined_text'], row['vector']))
 
         # Use executemany for efficient bulk insertion
-        cursor.executemany(sql, data_to_insert)
+        for index, row in df.iterrows():
+            cursor.execute(sql, [row.Name,row.College,row.Major,row.High_School, row.High_School_Location, row.combined_text, row.vector])
+        # for row in data_to_insert:
+        #     cursor.execute(sql, list(row))
+        #cursor.executemany(sql, data_to_insert)
+        print("sdsdfd")
 
         # Commit the transaction
         conn.commit()
