@@ -1,11 +1,10 @@
 import { FC } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Button, Form } from "antd";
+import { Button, Form, Input } from "antd";
 import "swiper/css";
 //
 import { SignInWithLinkedinBtn } from "./components/linkedin-btn";
 import "./index.scss";
-import { Input } from "antd";
 
 export const UploaderPage: FC = () => {
   const [form] = Form.useForm();
@@ -13,7 +12,7 @@ export const UploaderPage: FC = () => {
   return (
     <>
       <Swiper className="swiper-wrapper">
-        <SwiperSlide className="swiper-slide">
+        <SwiperSlide className="swiper-slide custom-wrapper">
           <h1>Let's get started!</h1>
           <p>
             To help us build your personalized college plan, connect your LinkedIn profile. This way, we can gather key info like your education, work experience, and skills. Don’t worry, you’ll be able to review and tweak everything before we move ahead.

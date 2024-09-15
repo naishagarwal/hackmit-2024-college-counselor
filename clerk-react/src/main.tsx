@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import './index.css'
+import './index.scss'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 
 // Import the layouts
@@ -14,6 +14,7 @@ import SignUpPage from './routes/sign-up'
 import DashboardPage from './routes/dashboard'
 import ProfilePage from './routes/profile'
 import { UploaderPage } from './routes/uploader'
+import NetworkPage from './routes/network'
 
 const router = createBrowserRouter([
   {
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
         path: 'app',
         children: [
           { path: '/app', element: <DashboardPage /> },
+          { path: '/app/my-network', element: <NetworkPage /> },
           { path: '/app/uploader', element: <UploaderPage /> },
           { path: '/app/profile', element: <ProfilePage /> },
         ],

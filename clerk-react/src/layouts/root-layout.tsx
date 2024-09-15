@@ -18,16 +18,13 @@ export default function RootLayout() {
     >
       <header className="header">
         <div className="header-content">
-          <p className="logo">LinkUp</p>
+          <p className="logo">LinkApp</p>
           <nav className="navbar">
             <ul className="navbar-list">
-              <li><Link to="/">Home</Link></li>
-              {/* <li><Link to="/sign-in">Sign In</Link></li> */}
-              {/* <li><Link to="/sign-up">Sign Up</Link></li> */}
+              <li><Link to="/app">Home</Link></li>
               <SignedIn>
-                <li><Link to="/app">Dashboard</Link></li>
-                <li><Link to="/app/uploader">Upload LinkedIn</Link></li>
-                <li><Link to="/app/profile">My Profile</Link></li>
+                <li><Link to="/app/my-network">My Network</Link></li>
+                <li><Link to="/app/uploader">Uploader</Link></li>
                 <li><UserButton /></li>
               </SignedIn>
             </ul>
