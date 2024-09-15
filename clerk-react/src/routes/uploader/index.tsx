@@ -37,7 +37,7 @@ export const UploaderPage: FC = () => {
       };
       const results = await similaritiesApi.querySimilarities(similarities_payload);
       console.info("got the similarities", results);
-      dispatch(setSimilaritiesResults({ results }));
+      dispatch(setSimilaritiesResults({ results: results.results }));
       setProcessing(false);
       dispatch(setFetchCollegePlanFlag({ flag: true }));
     }
