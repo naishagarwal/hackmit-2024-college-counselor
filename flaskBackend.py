@@ -270,6 +270,7 @@ def summary_statistics():
             FROM {tableName}
             WHERE College = ?
         """
+
         cursor.execute(total_college_count_query, [college_query])
         result = cursor.fetchone()
         total_college_count = result[0] if result else 0  # Ensure it gets the correct integer value
@@ -280,6 +281,7 @@ def summary_statistics():
             FROM {tableName}
             WHERE College = ? AND combined_text LIKE ?
         """
+
         cursor.execute(activity_count_query, [college_query, f'%{activity_query}%'])
         result = cursor.fetchone()
         activity_count = result[0] if result else 0  # Ensure it gets the correct integer value
@@ -290,6 +292,7 @@ def summary_statistics():
             FROM {tableName}
             WHERE College = ? AND High_School_Location = ?
         """
+        
         cursor.execute(location_count_query, [college_query, location_query])
         result = cursor.fetchone()
         location_count = result[0] if result else 0  # Ensure it gets the correct integer value
@@ -299,7 +302,13 @@ def summary_statistics():
         conn.close()
 
         print(total_college_count)
+        print(activity_count)
+        print(location_count)
+        
         total_college_count = total_college_count[0]
+        activity_count = activity_count[0]
+        location_count = location_count[0]
+
         if total_college_count > 0:
             activity_percentage = (activity_count / total_college_count) * 100
             location_percentage = (location_count / total_college_count) * 100
@@ -318,6 +327,7 @@ def summary_statistics():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/generate_college_plan', methods=['POST'])
 def generate_college_plan():
@@ -353,6 +363,46 @@ def generate_college_plan():
         # Create the prompt for the LLM
         prompt = f"""
         {user_name} has the following query: '{user_query}'.
+@app.route('/generate_college_plan', methods=['POST'])
+def generate_college_plan():
+    try:
+        # Get the user query from the request
+        user_query = request.json.get('query')
+        user_name = request.json.get('name')
+        if not user_query:
+            return jsonify({'error': 'No query provided'}), 400
+
+        # Fetch similar results (you can reuse the query_similarity logic here)
+        similar_profiles_response, status_code = query_similarity()
+        print(type(similar_profiles_response)) #Flask Response Object
+
+        if status_code != 200:
+            return jsonify({'error': 'Failed to fetch similar profiles'}), status_code
+
+        # Parse the JSON response body (similar_profiles_response is likely a JSON string)
+        similar_profiles_data = similar_profiles_response.get_json()
+        print(type(similar_profiles_data))
+        #print(similar_profiles_data)
+
+        name_combined_text_dict = {profile['Name']: profile['combined_text'] for profile in similar_profiles_data['results']}
+        print(name_combined_text_dict)
+
+        combined_sentences = ""
+        for name, text in name_combined_text_dict.items():
+            sentence = f"Name {name}, Info: {text}. "
+            combined_sentences+= sentence
+        
+        print(combined_sentences)
+
+        # Create the prompt for the LLM
+        prompt = f"""
+        {user_name} has the following query: '{user_query}'.
+        Based on the following similar profiles:
+        {combined_sentences}
+        Provide a personalized college plan for the student. Make your response as specific as possible to the student data provided, giving examples. The response should be addressed to the student. Make this as short and succint as possible.
+        """
+
+        url = "https://api.openai.com/v1/chat
         Based on the following similar profiles:
         {combined_sentences}
         Provide a personalized college plan for the student. Make your response as specific as possible to the student data provided, giving examples. The response should be addressed to the student. Make this as short and succint as possible.
