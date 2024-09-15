@@ -1,4 +1,4 @@
-Name,College,Major,High_School,High_School_Location,Extracurriculars,Volunteering,Awards
+Name,College,Major,High School,High School Location,Extracurriculars,Volunteering,Awards
 Aiden Brooks,MIT,Computer Science,Berkeley High School,Berkeley CA,"Robotics Club (President), Coding Club, Jazz Band","Tutored coding at local community center","USACO Gold Division, National Merit Scholar"
 Bella Johnson,UCLA,Biology,Beverly Hills High School,Beverly Hills CA,"Science Olympiad (Vice President), Swim Team, Environmental Club","Coastal Clean-Up Volunteer","AP Scholar with Distinction, State Science Fair Winner"
 Calvin Chen,Stanford University,Mathematics,Carmel High School,Carmel IN,"Math Club (President), Drama Club, Chess Club","Math Tutor at senior center","AMC 12 Honor Roll, USAJMO Qualifier"
@@ -30,3 +30,4 @@ Grace Walker,Stanford University,Mathematics,Georgetown Day School,Washington DC
 Hunter Murphy,Harvard University,Computer Science,Phillips Academy Andover,Andover MA,"Robotics Club (President), Film Club, Soccer Team","Code for America Volunteer","Google Code-In Winner, National Merit Scholar"
 Ivy Nguyen,MIT,Biology,The Bishop's School,La Jolla CA,"Science Olympiad (Vice President), Tennis Team, Drama Club","Children's Hospital Volunteer","ISEF Finalist, AP Scholar with Honor"
 Yusuf Ahmed,Stanford University,Computer Science,Henry M. Gunn High School,Palo Alto CA,"Robotics Club (President), Programming Club, Music Club","Free Coding Classes Organizer","Google Code-In Finalist, National Merit Scholar"
+
