@@ -99,7 +99,7 @@ export function PlanPage() {
               After exploring these connections, take a look at your personalized college plan below. It's crafted based on your interests, providing tailored advice and actionable steps to help navigate your future academic career.
             </p>
             <span>
-              {collegePlan?.personalized_college_plan || "Your college plan is being generated ..."}
+              {collegePlan || "Your college plan is being generated ..."}
             </span>
           </div>
         </>

@@ -3,9 +3,18 @@ from flask_cors import CORS
 import os
 import openai
 from fuzzywuzzy import process, fuzz
+import yaml
+
+def load_config(config_file):
+    with open(config_file, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+config = load_config('config.yaml')
 
 #replace with your own
-openai.api_key = '<API_KEY>'
+openai.api_key = config['OPEN_API_KEY']
+print(openai.api_key)
 
 app = Flask(__name__)
 #CORS(app)
@@ -340,7 +349,7 @@ def generate_college_plan():
 
         # Fetch similar results (you can reuse the query_similarity logic here)
         similar_profiles_response, status_code = query_similarity()
-        print(type(similar_profiles_response)) #Flask Response Object
+        #print(type(similar_profiles_response)) #Flask Response Object
 
         if status_code != 200:
             return jsonify({'error': 'Failed to fetch similar profiles'}), status_code
@@ -369,9 +378,9 @@ def generate_college_plan():
         """
 
         url = "https://api.openai.com/v1/chat/completions"
-        api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
+        #api_key = 'sk-R9MxTx6I0ZOEGTQNe1KGbUmmdx73ilYAFCANkC3zudT3BlbkFJFUbh-GeIlPG9glu7kzHGh1bg82cva5mJ6zAuSeGX4A'
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {openai.api_key}",
             "Content-Type": "application/json"
         }
         data = {
@@ -384,6 +393,7 @@ def generate_college_plan():
 
         response = requests.post(url, headers=headers, json=data)
         response_json = response.json()
+        print(response_json)
 
         # Extract the generated response from the LLM
         generated_plan = response_json['choices'][0]['message']['content'].strip()
